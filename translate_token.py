@@ -1,4 +1,5 @@
-from sqlparse import tokens
+from sqlparse.sql import Function, IdentifierList
+
 
 class TranslateToken:
 
@@ -9,19 +10,20 @@ class TranslateToken:
 
     def translate(self):
         changed = False
+        if self.isfunction():
+            if self._token.value.lower() == 'date':
+                changed = True
+                self._value = 'TO_DATE'
+            if self._token.value.lower().startswith('convert_timezone'):
+                changed = True
+                self.remove_sequential_children("'utc'", ',')
+
         if self._token.is_group:
             for token in self._token.tokens:
                 child = TranslateToken(token)
                 self._children.append(child)
                 if child.translate():
                     changed = True
-        else:
-            if self._token.ttype == tokens.Name:
-                if self._token.value.lower() == 'date':
-                    changed = True
-                    self._value = 'TO_DATE'
-            # else:
-            #    self.print()
 
         return changed
 
@@ -32,6 +34,41 @@ class TranslateToken:
             values = [child.value() for child in self._children]
             return ''.join(values)
         return self._token.value
+
+    def isfunction(self):
+        return isinstance(self._token, Function) or isinstance(self._token.parent, Function)
+
+    def isidentifier(self):
+        return isinstance(self._token, IdentifierList) or isinstance(self._token.parent, IdentifierList)
+
+    def has_parent_function(self, function_name):
+        parent = self.get_parent(self._token)
+        while parent is not None:
+            if parent.isfunction() and parent.ischild_identifier(function_name):
+                return True
+            parent = self.get_parent(self._token)
+        return False
+
+    def get_parent(self, token):
+        return TranslateToken(token.parent) if token.parent is not None else None
+
+    def remove_sequential_children(self, *args):
+        keep = []
+        child_translators = []
+        arg_index = 0
+        for child in self._token.tokens:
+            if arg_index < len(args) and child.value.lower() == args[arg_index]:
+                arg_index += 1
+            else:
+                child_translators.append(TranslateToken(child))
+                keep.append(child)
+
+        if arg_index == 0:
+            for child in child_translators:
+                if child._token.is_group:
+                    child.remove_sequential_children(*args)
+        else:
+            self._token.tokens[:] = keep
 
     def print(self):
         if not self._token.is_whitespace:
