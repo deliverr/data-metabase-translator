@@ -12,15 +12,13 @@ class SqlTranslator:
 
     def translate(self, sql):
         statements = sqlparse.parse(sql)
-        if (len(statements)) > 1:
-            print(f"More than one parsed statement for sql {sql}")
-        parsed = statements[0]
         translate_tokens = []
-        for token in parsed.tokens:
-            translate_token = TranslateToken(token)
-            translate_tokens.append(translate_token)
-            if translate_token.translate():
-                self._changed = True
+        for parsed in statements:
+            for token in parsed.tokens:
+                translate_token = TranslateToken(token)
+                translate_tokens.append(translate_token)
+                if translate_token.translate():
+                    self._changed = True
 
         if self._changed:
             values = [token.value() for token in translate_tokens]
