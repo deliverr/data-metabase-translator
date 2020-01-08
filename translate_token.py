@@ -1,4 +1,4 @@
-from sqlparse.sql import Function, IdentifierList
+from sqlparse.sql import Function, IdentifierList, Statement
 
 
 class TranslateToken:
@@ -10,6 +10,10 @@ class TranslateToken:
 
     def translate(self):
         changed = False
+        if self._token.value.lower() == 'interval':
+            # print(f"{self.get_statement(self._token)} uses 'interval'")
+            pass
+
         if self.isfunction():
             if self._token.value.lower() == 'date':
                 changed = True
@@ -51,6 +55,17 @@ class TranslateToken:
 
     def get_parent(self, token):
         return TranslateToken(token.parent) if token.parent is not None else None
+
+    def get_statement(self, token):
+        if isinstance(token, Statement) or isinstance(self._token.parent, Statement):
+            return token
+        parent = self.get_parent(token)
+        while parent is not None:
+            statement = self.get_statement(parent._token)
+            if statement is not None:
+                return statement
+            parent = self.get_parent(parent._token)
+        raise ValueError(f"No statement found for token {token}!")
 
     def remove_sequential_children(self, *args):
         keep = []

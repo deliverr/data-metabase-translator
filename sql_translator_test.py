@@ -22,3 +22,9 @@ class SqlTranslatorTestCase(TestCase):
         assert translator.changed()
         assert translator.sql() == "select TO_DATE (convert_timezone ('America/Los_Angeles',mytimestamp)) " \
                                    "as mydate from mytable"
+
+    def testInterval(self):
+        sql = "select mydate +INTERVAL '-30 day' from mytable"
+        translator = SqlTranslator(sql)
+        assert translator.changed()
+        assert translator.sql() == "select dateadd(day, -30, mydate) from mytable"
