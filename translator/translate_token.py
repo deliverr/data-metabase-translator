@@ -22,7 +22,7 @@ class TranslateToken:
             # print(f"{self.get_statement()} uses 'interval'")
             pass
 
-        if self.isfunction():
+        if self.is_function():
             if self._token.value.lower() == 'date':
                 changed = True
                 self._value = 'TO_DATE'
@@ -44,29 +44,29 @@ class TranslateToken:
             return ''.join(values)
         return self._token.normalized
 
-    def isfunction(self):
+    def is_function(self):
         return isinstance(self._token, Function) or isinstance(self._token.parent, Function)
 
-    def isidentifier(self):
+    def is_identifier(self):
         return isinstance(self._token, IdentifierList) or isinstance(self._token.parent, IdentifierList)
 
     def has_parent_function(self, function_name):
-        parent = self.parent
+        parent = self._parent
         while parent is not None:
-            if parent.isfunction() and parent.ischild_identifier(function_name):
+            if parent.is_function() and parent.ischild_identifier(function_name):
                 return True
-            parent = parent.parent
+            parent = parent._parent
         return False
 
     def get_statement(self):
         if isinstance(self._token, Statement) or isinstance(self._token.parent, Statement):
             return self._token
-        parent = self.parent
+        parent = self._parent
         while parent is not None:
             statement = parent.get_statement()
             if statement is not None:
                 return statement
-            parent = parent.parent
+            parent = parent._parent
         raise ValueError(f"No statement found for token {self._token}!")
 
     def remove_sequential_children(self, *values):
