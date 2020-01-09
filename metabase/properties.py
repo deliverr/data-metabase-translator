@@ -16,4 +16,3 @@ class Properties:
         self.db = DbProps(**props['connection'])
         self.source = DatabaseId(**props['source'])
         self.target = DatabaseId(**props['target'])
-

@@ -41,11 +41,12 @@ class ReportCardRepo:
         return report_cards
 
     def create_migration(self, report_card: ReportCard, sql: str) -> ReportCardMigration:
+        original_sql = report_card.dataset_query['native']['query']
         report_card.dataset_query['native']['query'] = sql
         report_card.dataset_query['database'] = self.target_database_id
         return ReportCardMigration(
             id=report_card.id,
-            original_query=sql,
+            original_query=original_sql,
             query=sql,
             dataset_query=json.dumps(report_card.dataset_query))
 

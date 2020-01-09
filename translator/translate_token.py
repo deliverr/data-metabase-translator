@@ -1,13 +1,14 @@
 """
 Wraps a sqlparse token with helper methods
 """
+from typing import Callable
 
 from sqlparse.sql import Function, IdentifierList, Statement, Token
 
 
 class TranslateToken:
 
-    def __init__(self, token, parent=None):
+    def __init__(self, token: Token, parent=None):
         self._token = token
         self._parent = parent
         self._value = None
@@ -16,25 +17,18 @@ class TranslateToken:
         else:
             self._children = []
 
-    def translate(self):
-        changed = False
-        if self._token.value.lower() == 'interval':
-            # print(f"{self.get_statement()} uses 'interval'")
-            pass
+    def translate(self, cb_sql_dialect_rules: Callable[['TranslateToken'], None]) -> str:
+        """
+        Translate a token (with all its children) using a given callback function
 
-        if self.is_function():
-            if self._token.value.lower() == 'date':
-                changed = True
-                self._value = 'TO_DATE'
-            if self._token.value.lower().startswith('convert_timezone'):
-                changed = True
-                self.remove_sequential_children("'utc'", ',')
+        :type cb_sql_dialect_rules: Callback function that applies SQL dialect migration rules
+        """
+        cb_sql_dialect_rules(self)
 
         for child in self._children:
-            if child.translate():
-                changed = True
+            child.translate(cb_sql_dialect_rules)
 
-        return changed
+        return self.value()
 
     def value(self):
         if self._value is not None:
@@ -43,6 +37,15 @@ class TranslateToken:
             values = [child.value() for child in self._children]
             return ''.join(values)
         return self._token.normalized
+
+    def set(self, str):
+        self._value = str
+
+    def matches(self, value: str) -> bool:
+        return self._token.value.lower() == value.lower()
+
+    def startswith(self, value: str) -> bool:
+        return self._token.value.lower().startswith(value.lower())
 
     def is_function(self):
         return isinstance(self._token, Function) or isinstance(self._token.parent, Function)

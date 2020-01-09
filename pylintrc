@@ -268,6 +268,9 @@ variable-naming-style=snake_case
 
 [IMPORTS]
 
+# Tells whether we should check for unused import in __init__ files.
+init-import=no
+
 # List of modules that can be imported at any level, not just the top level
 # one.
 allow-any-import-level=
