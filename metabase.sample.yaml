@@ -1,0 +1,14 @@
+connection:
+  host: localhost
+  port: 5432
+  user: myuser
+  password: mypassword
+  dbname: metabase
+
+source:
+  name: Redshift
+  database_id: 1
+
+target:
+  name: Snowflake
+  database_id: 2
