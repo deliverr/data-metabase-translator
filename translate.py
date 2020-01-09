@@ -1,3 +1,6 @@
+"""
+Reads queries from Metabase, translates the SQL and stores the translations in report_card_migrations table.
+"""
 
 from collections import namedtuple
 import psycopg2.extras
@@ -8,7 +11,7 @@ from sql_translator import SqlTranslator
 db_props = yaml.safe_load(open('metabase.yaml', 'r'))
 conn = psycopg2.connect(**db_props['connection'])
 
-cursor = conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
+cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 cursor.execute(f"select id, name, dataset_query, query_type "
                f"from report_card "
                f"where database_id = {db_props['source']['database_id']}"
@@ -50,4 +53,3 @@ conn.commit()
 conn.close()
 
 print(f"Wrote {len(updates)} rows to report_card_migration")
-

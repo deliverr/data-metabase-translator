@@ -1,5 +1,10 @@
+"""
+Translates a SQL string from one dialect to another
+"""
+
 import sqlparse
 from translate_token import TranslateToken
+
 
 class SqlTranslator:
 

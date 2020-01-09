@@ -1,3 +1,7 @@
+"""
+Wraps a sqlparse token with helper methods
+"""
+
 from sqlparse.sql import Function, IdentifierList, Statement
 
 
