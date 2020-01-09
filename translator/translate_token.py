@@ -2,20 +2,24 @@
 Wraps a sqlparse token with helper methods
 """
 
-from sqlparse.sql import Function, IdentifierList, Statement
+from sqlparse.sql import Function, IdentifierList, Statement, Token
 
 
 class TranslateToken:
 
-    def __init__(self, token):
+    def __init__(self, token, parent=None):
         self._token = token
+        self._parent = parent
         self._value = None
-        self._children = []
+        if token.is_group:
+            self._children = [TranslateToken(child, self) for child in token.tokens]
+        else:
+            self._children = []
 
     def translate(self):
         changed = False
         if self._token.value.lower() == 'interval':
-            # print(f"{self.get_statement(self._token)} uses 'interval'")
+            # print(f"{self.get_statement()} uses 'interval'")
             pass
 
         if self.isfunction():
@@ -26,12 +30,9 @@ class TranslateToken:
                 changed = True
                 self.remove_sequential_children("'utc'", ',')
 
-        if self._token.is_group:
-            for token in self._token.tokens:
-                child = TranslateToken(token)
-                self._children.append(child)
-                if child.translate():
-                    changed = True
+        for child in self._children:
+            if child.translate():
+                changed = True
 
         return changed
 
@@ -41,7 +42,7 @@ class TranslateToken:
         if self._children:
             values = [child.value() for child in self._children]
             return ''.join(values)
-        return self._token.value
+        return self._token.normalized
 
     def isfunction(self):
         return isinstance(self._token, Function) or isinstance(self._token.parent, Function)
@@ -50,49 +51,50 @@ class TranslateToken:
         return isinstance(self._token, IdentifierList) or isinstance(self._token.parent, IdentifierList)
 
     def has_parent_function(self, function_name):
-        parent = self.get_parent(self._token)
+        parent = self.parent
         while parent is not None:
             if parent.isfunction() and parent.ischild_identifier(function_name):
                 return True
-            parent = self.get_parent(self._token)
+            parent = parent.parent
         return False
 
-    def get_parent(self, token):
-        return TranslateToken(token.parent) if token.parent is not None else None
-
-    def get_statement(self, token):
-        if isinstance(token, Statement) or isinstance(self._token.parent, Statement):
-            return token
-        parent = self.get_parent(token)
+    def get_statement(self):
+        if isinstance(self._token, Statement) or isinstance(self._token.parent, Statement):
+            return self._token
+        parent = self.parent
         while parent is not None:
-            statement = self.get_statement(parent._token)
+            statement = parent.get_statement()
             if statement is not None:
                 return statement
-            parent = self.get_parent(parent._token)
-        raise ValueError(f"No statement found for token {token}!")
+            parent = parent.parent
+        raise ValueError(f"No statement found for token {self._token}!")
 
-    def remove_sequential_children(self, *args):
+    def remove_sequential_children(self, *values):
+        """
+        Remove children whose values match given strings.
+        :param values: string values to match
+        :return: None
+        """
         keep = []
-        child_translators = []
         arg_index = 0
-        for child in self._token.tokens:
-            if arg_index < len(args) and child.value.lower() == args[arg_index]:
+        for child in self._children:
+            if arg_index < len(values) and child._token.value.lower() == values[arg_index]:
                 arg_index += 1
             else:
-                child_translators.append(TranslateToken(child))
                 keep.append(child)
 
         if arg_index == 0:
-            for child in child_translators:
-                if child._token.is_group:
-                    child.remove_sequential_children(*args)
+            for child in keep:
+                if child._children:
+                    child.remove_sequential_children(*values)
         else:
-            self._token.tokens[:] = keep
+            self._token.tokens[:] = [child._token for child in keep]
+            self._children[:] = keep
 
     def print(self):
         if not self._token.is_whitespace:
-            if self._token.is_group:
-                for token in self._token.tokens:
-                    token.print()
+            if self._children:
+                for child in self._children:
+                    child.print()
             else:
                 print(f"{self._token} {self._token.ttype}")
