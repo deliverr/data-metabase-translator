@@ -38,7 +38,7 @@ class TranslateToken:
     def value(self):
         if self._value is not None:
             return self._value
-        if len(self._children) > 0:
+        if self._children:
             values = [child.value() for child in self._children]
             return ''.join(values)
         return self._token.value

@@ -2,10 +2,10 @@
 Unit test translation of SQL strings
 """
 from unittest import TestCase
-from sql_translator import SqlTranslator
+from translator import SqlTranslator
 
 
-class SqlTranslatorTestCase(TestCase):
+class SqlTranslatorTest(TestCase):
 
     def test_simple(self):
         sql = "select id, name, value from mytable"

@@ -3,7 +3,7 @@ Translates a SQL string from one dialect to another
 """
 
 import sqlparse
-from translate_token import TranslateToken
+from translator.translate_token import TranslateToken
 
 
 class SqlTranslator:
