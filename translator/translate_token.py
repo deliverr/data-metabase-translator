@@ -67,7 +67,7 @@ class TranslateToken:
     def has_changed(self):
         return self._value is not None
 
-    def has_ancestor_function(self, function_name):
+    def matches_ancestor_function(self, function_name):
         """
         Checks whether there is an ancestor token that matches a given function name
 

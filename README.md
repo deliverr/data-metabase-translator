@@ -9,7 +9,8 @@ class for that purpose.
 
 ## Installation
 
-A Pipfile is included, so that after cloning the repo `pipenv install` will install needed dependencies.
+Requires python 3.5+ and has been tested on 3.7. A Pipfile is included, so that after cloning the repo `pipenv install` 
+will install needed dependencies.
 
 ## Configuration
 
@@ -32,11 +33,14 @@ Apply the migration changes with:
 
 ```postgresql
 UPDATE report_card
-SET dataset_query = migration.dataset_query,
+SET dataset_query = migration.target_dataset_query,
     database_id = migration.target_database_id
 FROM report_card_migration AS migration
 WHERE report_card.id = migration.card_id;
 ```
+
+The changes can be reverted by changing the `SET` values to `source_dataset_query` and `source_database_id` and 
+re-running the query.
 
 ## Development
 
