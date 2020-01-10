@@ -3,19 +3,20 @@ Wraps a sqlparse token with helper methods
 """
 from typing import Callable
 
-from sqlparse.sql import Function, IdentifierList, Statement, Token
+from sqlparse import tokens
+from sqlparse.sql import Function, Identifier, Statement, Token
 
 
 class TranslateToken:
 
     def __init__(self, token: Token, parent=None):
         self._token = token
-        self._parent = parent
+        self.parent = parent
         self._value = None
         if token.is_group:
-            self._children = [TranslateToken(child, self) for child in token.tokens]
+            self.children = [TranslateToken(child, self) for child in token.tokens]
         else:
-            self._children = []
+            self.children = []
 
     def translate(self, cb_sql_dialect_rules: Callable[['TranslateToken'], None]) -> str:
         """
@@ -25,7 +26,7 @@ class TranslateToken:
         """
         cb_sql_dialect_rules(self)
 
-        for child in self._children:
+        for child in self.children:
             child.translate(cb_sql_dialect_rules)
 
         return self.value()
@@ -33,8 +34,8 @@ class TranslateToken:
     def value(self):
         if self._value is not None:
             return self._value
-        if self._children:
-            values = [child.value() for child in self._children]
+        if self.children:
+            values = [child.value() for child in self.children]
             return ''.join(values)
         return self._token.normalized
 
@@ -51,10 +52,29 @@ class TranslateToken:
         return isinstance(self._token, Function) or isinstance(self._token.parent, Function)
 
     def is_identifier(self):
-        return isinstance(self._token, IdentifierList) or isinstance(self._token.parent, IdentifierList)
+        return isinstance(self._token, Identifier) or isinstance(self._token.parent, Identifier)
 
-    def has_parent_function(self, function_name):
-        parent = self._parent
+    def is_literal(self):
+        return self._token.ttype in [tokens.Literal,
+                                     tokens.Literal.String,
+                                     tokens.Literal.Number,
+                                     tokens.Literal.String.Single,
+                                     tokens.Literal.Number.Single]
+
+    def is_whitespace(self):
+        return self._token.is_whitespace
+
+    def has_changed(self):
+        return self._value is not None
+
+    def has_ancestor_function(self, function_name):
+        """
+        Checks whether there is an ancestor token that matches a given function name
+
+        :param function_name: str function name to match
+        :return: bool
+        """
+        parent = self.parent
         while parent is not None:
             if parent.is_function() and parent.ischild_identifier(function_name):
                 return True
@@ -64,7 +84,7 @@ class TranslateToken:
     def get_statement(self):
         if isinstance(self._token, Statement) or isinstance(self._token.parent, Statement):
             return self._token
-        parent = self._parent
+        parent = self.parent
         while parent is not None:
             statement = parent.get_statement()
             if statement is not None:
@@ -80,7 +100,7 @@ class TranslateToken:
         """
         keep = []
         arg_index = 0
-        for child in self._children:
+        for child in self.children:
             if arg_index < len(values) and child._token.value.lower() == values[arg_index]:
                 arg_index += 1
             else:
@@ -88,16 +108,16 @@ class TranslateToken:
 
         if arg_index == 0:
             for child in keep:
-                if child._children:
+                if child.children:
                     child.remove_sequential_children(*values)
         else:
             self._token.tokens[:] = [child._token for child in keep]
-            self._children[:] = keep
+            self.children[:] = keep
 
     def print(self):
         if not self._token.is_whitespace:
-            if self._children:
-                for child in self._children:
+            if self.children:
+                for child in self.children:
                     child.print()
             else:
                 print(f"{self._token} {self._token.ttype}")
