@@ -4,7 +4,7 @@ Wraps a sqlparse token with helper methods
 from typing import Callable
 
 from sqlparse import tokens
-from sqlparse.sql import Function, Identifier, Statement, Token
+from sqlparse.sql import Comparison, Function, Identifier, Statement, Token
 
 
 class TranslateToken:
@@ -48,11 +48,20 @@ class TranslateToken:
     def startswith(self, value: str) -> bool:
         return self._token.value.lower().startswith(value.lower())
 
+    def contains(self, value: str) -> bool:
+        return value.lower() in self._token.value.lower()
+
+    def replace(self, old: str, new: str, count=1):
+        self.set(self._token.value.replace(old, new, count))
+
     def is_function(self):
         return isinstance(self._token, Function) or isinstance(self._token.parent, Function)
 
     def is_identifier(self):
         return isinstance(self._token, Identifier) or isinstance(self._token.parent, Identifier)
+
+    def is_comparison(self):
+        return isinstance(self._token, Comparison) or isinstance(self._token.parent, Comparison)
 
     def is_literal(self):
         return self._token.ttype in [tokens.Literal,

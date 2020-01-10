@@ -11,12 +11,16 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
 
         if token.matches('interval'):
             convert_interval(token)
-
-        if token.is_function():
+        elif token.is_function():
             if token.matches('date'):
                 token.set('TO_DATE')
-            if token.startswith('convert_timezone'):
+            elif token.startswith('convert_timezone'):
                 token.remove_sequential_children("'utc'", ',')
+            elif token.matches('getdate'):
+                token.set('current_timestamp')
+        elif token.matches('#'):
+            token.set('num')
+
 
     except ValueError as e:
         print(token.get_statement())
@@ -46,6 +50,9 @@ def convert_interval(token):
                     print(f"Migration of 'interval' in {token.get_statement()} not yet implemented")
                     return
                 date_var = pop_beyond_whitespace(stack)
+                if date_var.is_comparison():   # e.g. date1 >= date2 - interval '5 day'
+                    stack.extend(date_var.children[:-1])
+                    date_var = date_var.children[-1]
                 new_children.extend(stack)
             elif not date_var:
                 stack.append(sibling)
@@ -54,13 +61,13 @@ def convert_interval(token):
             elif sibling.is_literal():
                 parts = sibling.value().replace("'", '').strip().split(' ')
                 if len(parts) == 1:  # e.g. -60DAY
-                    num = ''.join(parts[0:])
+                    num = parts[0]
                     num += ''.join([d for d in parts[1:] if d.isdigit()])
                     unit = parts[len(num) - 1:]
                 elif len(parts) == 2:  # e.g. -60 DAY
                     num, unit = parts
                 elif len(parts) == 3:  # e.g. - 60 DAY
-                    num = ''.join(parts[:-1])
+                    num = parts[-1]
                     unit = ''.join(parts[-1:])
                 else:
                     raise ValueError(f"Too many INTERVAL parts in {token.get_statement()}")
