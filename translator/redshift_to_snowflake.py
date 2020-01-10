@@ -14,8 +14,10 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
         elif token.is_function():
             if token.matches('date'):
                 token.set('TO_DATE')
-            if token.startswith('convert_timezone'):
+            elif token.startswith('convert_timezone'):
                 token.remove_sequential_children("'utc'", ',')
+            elif token.matches('getdate'):
+                token.set('current_date')
         elif token.matches('#'):
             token.set('num')
 

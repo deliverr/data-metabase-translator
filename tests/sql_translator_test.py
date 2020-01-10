@@ -53,3 +53,7 @@ class SqlTranslatorTest(TestCase):
         translator = SqlTranslator(sql)
         assert translator.sql() == "SELECT num_of_codes FROM mytable LIMIT 1"
 
+    def test_getdate(self):
+        sql = "SELECT getdate() from mytable ORDER BY 1 DESC"
+        translator = SqlTranslator(sql)
+        assert translator.sql() == "SELECT current_date() FROM mytable ORDER BY 1 DESC"
