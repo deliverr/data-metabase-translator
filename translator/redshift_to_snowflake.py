@@ -10,7 +10,7 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
     try:
 
         if token.matches('interval'):
-            interval_to_dateadd(token)
+            convert_interval(token)
 
         if token.is_function():
             if token.matches('date'):
@@ -23,11 +23,19 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
         raise e
 
 
-def interval_to_dateadd(token):
+def convert_interval(token):
+    """
+    Converts the Postgresql/Redshift INTERVAL construct to ANSI SQL functions or operations, including:
+      - dateadd(<unit>, <increment>, <timestamp>)
+      - datediff(timestamp1, timestamp2) < <increment> <unit>
+    :param token: The INTERVAL token
+    :return: None
+    """
     date_var = None
     op = None
     new_children = []
     stack = []
+    # from the INTERVAL token we backtrack to understand the context, then re-assemble the tokens accordingly
     if token.parent and token.parent.children:
         for i, sibling in enumerate(token.parent.children):
             if sibling == token:
