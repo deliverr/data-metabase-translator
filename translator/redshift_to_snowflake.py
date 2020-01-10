@@ -11,12 +11,14 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
 
         if token.matches('interval'):
             convert_interval(token)
-
-        if token.is_function():
+        elif token.is_function():
             if token.matches('date'):
                 token.set('TO_DATE')
             if token.startswith('convert_timezone'):
                 token.remove_sequential_children("'utc'", ',')
+        elif token.matches('#'):
+            token.set('num')
+
 
     except ValueError as e:
         print(token.get_statement())

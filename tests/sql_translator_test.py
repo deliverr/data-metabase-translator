@@ -1,7 +1,9 @@
 """
 Unit test translation of SQL strings
 """
+import pytest
 from unittest import TestCase
+
 from translator import SqlTranslator
 
 
@@ -34,13 +36,20 @@ class SqlTranslatorTest(TestCase):
         assert translator.sql() == \
                "SELECT mytimestamp FROM mytable WHERE mytimestamp > DATEADD(hours, -24, CURRENT_DATE)"
 
+    @pytest.mark.skip(reason="standalone interval conversion not yet implemented")
     def test_interval_standalone(self):
         sql = "SELECT mytimestamp FROM mytable WHERE mytimestamp - yourtimestamp >= interval '4 hour'"
         translator = SqlTranslator(sql)
         assert translator.sql() == "SELECT mytimestamp FROM mytable WHERE datediff(hour, mytimestamp, yourtimestamp) >= 4"
 
+    @pytest.mark.skip(reason="interval to datediff conversion not yet implemented")
     def test_datediff(self):
         sql = "SELECT mytimestamp - your_timestamp as days from mytable"
         translator = SqlTranslator(sql)
         assert translator.sql() == "SELECT datediff(day, mytimestamp, your_timestamp) AS days FROM mytable"
+
+    def test_pound_as_identifier(self):
+        sql = "SELECT #_of_codes from mytable LIMIT 1"
+        translator = SqlTranslator(sql)
+        assert translator.sql() == "SELECT num_of_codes FROM mytable LIMIT 1"
 

@@ -48,6 +48,12 @@ class TranslateToken:
     def startswith(self, value: str) -> bool:
         return self._token.value.lower().startswith(value.lower())
 
+    def contains(self, value: str) -> bool:
+        return value.lower() in self._token.value.lower()
+
+    def replace(self, old: str, new: str, count=1):
+        self.set(self._token.value.replace(old, new, count))
+
     def is_function(self):
         return isinstance(self._token, Function) or isinstance(self._token.parent, Function)
 
