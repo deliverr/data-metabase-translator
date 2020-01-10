@@ -7,14 +7,20 @@ from translator.translate_token import TranslateToken
 
 
 def redshift_to_snowflake(token: TranslateToken) -> None:
-    if token.matches('interval'):
-        interval_to_dateadd(token)
+    try:
 
-    if token.is_function():
-        if token.matches('date'):
-            token.set('TO_DATE')
-        if token.startswith('convert_timezone'):
-            token.remove_sequential_children("'utc'", ',')
+        if token.matches('interval'):
+            interval_to_dateadd(token)
+
+        if token.is_function():
+            if token.matches('date'):
+                token.set('TO_DATE')
+            if token.startswith('convert_timezone'):
+                token.remove_sequential_children("'utc'", ',')
+
+    except ValueError as e:
+        print(token.get_statement())
+        raise e
 
 
 def interval_to_dateadd(token):
@@ -23,7 +29,7 @@ def interval_to_dateadd(token):
     new_children = []
     stack = []
     if token.parent and token.parent.children:
-        for sibling in token.parent.children:
+        for i, sibling in enumerate(token.parent.children):
             if sibling == token:
                 prev = pop_beyond_whitespace(stack)
                 op = prev.value()
@@ -38,7 +44,19 @@ def interval_to_dateadd(token):
             elif sibling.is_whitespace() and not token.has_changed():
                 pass
             elif sibling.is_literal():
-                num, unit = sibling.value().replace("'", '').strip().split(' ')
+                parts = sibling.value().replace("'", '').strip().split(' ')
+                if len(parts) == 1:  # e.g. -60DAY
+                    num = ''.join(parts[0:])
+                    num += ''.join([d for d in parts[1:] if d.isdigit()])
+                    unit = parts[len(num) - 1:]
+                elif len(parts) == 2:  # e.g. -60 DAY
+                    num, unit = parts
+                elif len(parts) == 3:  # e.g. - 60 DAY
+                    num = ''.join(parts[:-1])
+                    unit = ''.join(parts[-1:])
+                else:
+                    raise ValueError(f"Too many INTERVAL parts in {token.get_statement()}")
+
                 if num.startswith('-'):
                     if op == '+':
                         op = '-'
@@ -47,6 +65,8 @@ def interval_to_dateadd(token):
                     num = num[1:]
                 token.set(f"DATEADD({unit}, {op}{num}, {date_var.value()})")
                 new_children.append(token)
+                new_children.extend(token.parent.children[i + 1:])
+                break
             else:
                 new_children.append(sibling)
 
