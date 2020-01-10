@@ -6,4 +6,6 @@
 
 # connection settings
 metabase.yaml
-target.yaml
+metabase.local.yaml
+metabase.staging.yaml
+metabase.prod.yaml
