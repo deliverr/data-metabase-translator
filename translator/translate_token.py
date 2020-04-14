@@ -37,7 +37,7 @@ class TranslateToken:
         if self.children:
             values = [child.value() for child in self.children]
             return ''.join(values)
-        return self._token.normalized
+        return self._token.value
 
     def set(self, str):
         self._value = str

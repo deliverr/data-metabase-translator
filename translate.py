@@ -17,8 +17,10 @@ def main():
         sql = report_card.dataset_query['native']['query']
         translator = SqlTranslator(sql)
 
-        report_card_migrations.append(
-            repo.create_migration(report_card, translator.sql()))
+        new_sql = translator.sql()
+        if new_sql != sql:
+            report_card_migrations.append(
+                repo.create_migration(report_card, new_sql))
 
     repo.insert_all(report_card_migrations)
 
