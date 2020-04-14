@@ -35,7 +35,7 @@ def convert_interval(token):
     :param token: The INTERVAL token
     :return: None
     """
-    date_var = None
+    date_var = date_var_comp = None
     op = None
     new_children = []
     stack = []
@@ -45,14 +45,16 @@ def convert_interval(token):
             if sibling == token:
                 prev = pop_beyond_whitespace(stack)
                 op = prev.value()
-                if op not in ['+', '-']:
-                    # todo: standalone interval
-                    print(f"Migration of 'interval' in {token.get_statement()} not yet implemented")
-                    return
                 date_var = pop_beyond_whitespace(stack)
-                if date_var.is_comparison():   # e.g. date1 >= date2 - interval '5 day'
+                if date_var.is_comparison(): # e.g. date1 >= date2 - interval '5 day'
                     stack.extend(date_var.children[:-1])
                     date_var = date_var.children[-1]
+                elif op in ['>', '>=', '<', '<=']:  # e.g. date1 - date2 >= interval '4 hour'
+                    date_op = [o for o in date_var.children if o in ['+', '-']]
+                    if date_op == '+':
+                        print(f"Migration of 'interval' with '+' in {token.get_statement()} not yet implemented")
+                        return
+                    date_var, date_var_comp = (date_var.children[0], date_var.children[-1])
                 new_children.extend(stack)
             elif not date_var:
                 stack.append(sibling)
@@ -70,15 +72,19 @@ def convert_interval(token):
                     num = parts[-1]
                     unit = ''.join(parts[-1:])
                 else:
-                    raise ValueError(f"Too many INTERVAL parts in {token.get_statement()}")
+                    print(f"Handling interval in CASE not yet implemented, in {token.get_statement()}")
+                    return
 
-                if num.startswith('-'):
-                    if op == '+':
-                        op = '-'
-                    else:
-                        op = '+'
-                    num = num[1:]
-                token.set(f"DATEADD({unit}, {op}{num}, {date_var.value()})")
+                if op in ['+', '-']:
+                    if num.startswith('-'):
+                        if op == '+':
+                            op = '-'
+                        else:
+                            op = '+'
+                        num = num[1:]
+                    token.set(f"DATEADD({unit}, {op}{num}, {date_var.value()})")
+                elif date_var_comp is not None:
+                    token.set(f"DATEDIFF({unit}, {date_var.value()}, {date_var_comp.value()}) {op} {num}")
                 new_children.append(token)
                 new_children.extend(token.parent.children[i + 1:])
                 break
