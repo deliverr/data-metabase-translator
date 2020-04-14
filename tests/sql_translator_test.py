@@ -36,7 +36,6 @@ class SqlTranslatorTest(TestCase):
         assert translator.sql() == \
                "SELECT mytimestamp FROM mytable WHERE mytimestamp > DATEADD(hours, -24, CURRENT_DATE)"
 
-    @pytest.mark.skip(reason="standalone interval conversion not yet implemented")
     def test_interval_standalone(self):
         sql = "SELECT mytimestamp FROM mytable WHERE mytimestamp - yourtimestamp >= interval '4 hour'"
         translator = SqlTranslator(sql)

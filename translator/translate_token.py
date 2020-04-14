@@ -130,3 +130,6 @@ class TranslateToken:
                     child.print()
             else:
                 print(f"{self._token} {self._token.ttype}")
+
+    def __str__(self):
+        return self.value()
