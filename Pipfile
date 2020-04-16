@@ -10,7 +10,9 @@ pylint = "*"
 [packages]
 sqlparse = "*"
 pyyaml = "*"
-psycopg2 = "*"
+psycopg2-binary = "*"
+metabasepy = "*"
+requests = "*"
 
 [requires]
 python_version = "3.7"
