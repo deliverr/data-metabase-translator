@@ -23,9 +23,3 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
         print(token.get_statement())
         raise e
 
-
-def pop_beyond_whitespace(stack: List[TranslateToken]) -> TranslateToken:
-    prev = stack.pop()
-    while prev.is_whitespace():
-        prev = stack.pop()
-    return prev
