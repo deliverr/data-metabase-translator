@@ -11,6 +11,7 @@ from metabase import Properties
 
 ReportCard = namedtuple('ReportCard', ('id', 'name', 'dataset_query', 'query_type', 'database_id'))
 ReportCardMigration = namedtuple('ReportCardMigration', ['id', 'source_dataset_query', 'target_dataset_query'])
+ReportCardError = namedtuple('ReportCardError', ['card_id', 'dashboard_id', 'pulse_id', 'object_name', 'error'])
 
 
 class ReportCardRepo:
@@ -51,7 +52,7 @@ class ReportCardRepo:
             source_dataset_query=json.dumps(source_dataset_query),
             target_dataset_query=json.dumps(target_dataset_query))
 
-    def insert_all(self, report_card_migrations: List[ReportCardMigration]):
+    def insert_migrations(self, report_card_migrations: List[ReportCardMigration]):
         cursor = self.conn.cursor()
         for migration in report_card_migrations:
             insert = f"INSERT INTO report_card_migration " \
@@ -64,5 +65,21 @@ class ReportCardRepo:
                             self.target_database_id,
                             migration.source_dataset_query,
                             migration.target_dataset_query))
+        self.conn.commit()
+        self.conn.close()
+
+    def insert_errors(self, report_card_errors: List[ReportCardError]):
+        cursor = self.conn.cursor()
+        for error in report_card_errors:
+            insert = f"INSERT INTO report_card_error " \
+                     f"(card_id, dashboard_id, pulse_id, object_name, error, " \
+                     f" created_at, updated_at) " \
+                     f"VALUES (%s, %s, %s, current_timestamp , current_timestamp )"
+            cursor.execute(insert,
+                           (error.card_id,
+                            error.dashboard_id,
+                            error.pulse_id,
+                            error.object_name,
+                            error.error))
         self.conn.commit()
         self.conn.close()

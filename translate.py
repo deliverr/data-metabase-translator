@@ -22,7 +22,7 @@ def main():
             report_card_migrations.append(
                 repo.create_migration(report_card, new_sql))
 
-    repo.insert_all(report_card_migrations)
+    repo.insert_migrations(report_card_migrations)
 
     print(f"Wrote {len(report_card_migrations)} rows to report_card_migration")
 

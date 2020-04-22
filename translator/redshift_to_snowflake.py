@@ -16,6 +16,8 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
                 token.remove_sequential_children("'utc'", ',')
             elif token.matches('getdate'):
                 token.set('current_timestamp')
+            elif token.matches('DATE_DIFF'):
+                token.set('DATEDIFF')
         elif token.matches('#'):
             token.set('num')
 
