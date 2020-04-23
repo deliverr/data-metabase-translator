@@ -104,6 +104,6 @@ class ReportCardRepo:
                             error.dashboard_id,
                             error.pulse_id,
                             error.object_name,
-                            error.error[:512]))
+                            str(error.error)[:512]))
         self.conn.commit()
         self.conn.close()

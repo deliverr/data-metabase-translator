@@ -18,6 +18,8 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
                 token.set('datediff')
             elif token.matches('datepart'):
                 token.set('date_part')
+            elif token.startswith('convert_timezone'):
+                token.remove_sequential_children("'utc'", ',')
         elif token.is_literal():
             if token.matches("'utc'"):
                 token.set("'UTC'")
@@ -30,6 +32,8 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
                 token.set('warehousepoolinventorylog.delta')
             elif token.matches('transit.fasttagdaysleft'):
                 token.set('velocity.fasttagdaysleft')
+            elif token.matches('"order_count"'):
+                token.set('order_count')
             elif len(token.children) < 5 and token.contains('__'):
                 token.replace('__', ':')
 
