@@ -22,7 +22,7 @@ class SqlTranslatorTest(TestCase):
         sql = "select DATE (convert_timezone ('utc','America/Los_Angeles',mytimestamp)) " \
               "as mydate from mytable"
         translator = SqlTranslator(sql)
-        assert translator.sql() == "select TO_DATE (convert_timezone ('America/Los_Angeles',mytimestamp)) " \
+        assert translator.sql() == "select TO_DATE (convert_timezone ('UTC','America/Los_Angeles',mytimestamp)) " \
                                    "as mydate from mytable"
 
     def test_pound_as_identifier(self):
@@ -39,3 +39,14 @@ class SqlTranslatorTest(TestCase):
         sql = "SELECT mystuff FROM mytable WHERE mytable.createdate >= getdate() - interval '2 year'"
         translator = SqlTranslator(sql)
         assert translator.sql() == "SELECT mystuff FROM mytable WHERE mytable.createdate >= current_timestamp() - interval '2 year'"
+
+    def test_replace_underscores_with_json(self):
+        sql = "SELECT my__redshift__json__workaround FROM mytable"
+        translator = SqlTranslator(sql)
+        assert translator.sql() == "SELECT my:redshift:json:workaround FROM mytable"
+
+    def test_replace_transit_fasttagdaysleft(self):
+        sql = "SELECT * from transit.fasttagdaysleft left join transit.fasttagdaysleft on fasttagdaysleft.dsku = fasttagdaysleft.dsku"
+        translator = SqlTranslator(sql)
+        assert translator.sql() == "SELECT * from velocity.fasttagdaysleft left join velocity.fasttagdaysleft on fasttagdaysleft.dsku = fasttagdaysleft.dsku"
+

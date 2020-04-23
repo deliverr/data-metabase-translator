@@ -10,6 +10,7 @@ def main():
 
     repo = ReportCardRepo(props)
     report_cards = repo.fetchall()
+    #report_cards = repo.fetch_by_ids([2216])
     print(f"Retrieved {len(report_cards)} native queries")
 
     report_card_migrations = []

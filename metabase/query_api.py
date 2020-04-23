@@ -34,9 +34,20 @@ class QueryApi:
             return None
         for regex in ["(Object|Schema) '(?P<name>.+?)' does not exist",
                       "invalid identifier '(?P<name>.+?)'",
-                      'relation "(?P<name>.+?)" does not exist']:
+                      'relation "(?P<name>.+?)" does not exist',
+                      'Unknown function (?P<name>.+?)',
+                      "View definition for '(?P<name>.?)'"]:
             m = re.search(regex, error)
             if m:
                 return m.group("name")
+        m = re.search("(You'll need to pick a value|missing required parameters|Unable to substitute parameters)", error)
+        if m:
+            return "<requires parameters>"
+        m = re.search("Timestamp '(.+?)' is not recognized", error)
+        if m:
+            return "<timestamp not recognized>"
+        m = re.search("Numeric value '(.+?)' is not recognized", error)
+        if m:
+            return "<numeric value not recognized>"
 
         return None

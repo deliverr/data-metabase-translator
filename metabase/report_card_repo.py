@@ -42,6 +42,27 @@ class ReportCardRepo:
         cursor.close()
         return report_cards
 
+    def fetch_by_ids(self, ids: List[int]) -> List[ReportCard]:
+        cursor = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        cursor.execute(f"select card_id as id, '' as name, source_dataset_query as dataset_query, 'native' as query_type "
+                       f"from report_card_migration "
+                       f"where source_database_id = {self.props.source.database_id} "
+                       # f"and query_type = 'native' "
+                       f"and card_id in ({','.join(list(map(str, ids)))})")
+        raw_report_cards = cursor.fetchall()
+
+        report_cards = [
+            ReportCard(card['id'],
+                       card['name'],
+                       json.loads(card['dataset_query']),
+                       card['query_type'],
+                       self.props.target.database_id)
+            for card in raw_report_cards]
+
+        cursor.close()
+        return report_cards
+
     def create_migration(self, report_card: ReportCard, sql: str) -> ReportCardMigration:
         source_dataset_query = report_card.dataset_query
         target_dataset_query = deepcopy(source_dataset_query)
@@ -68,6 +89,9 @@ class ReportCardRepo:
         self.conn.commit()
         self.conn.close()
 
+    def insert_error(self, report_card_error: ReportCardError):
+        self.insert_errors([report_card_error])
+
     def insert_errors(self, report_card_errors: List[ReportCardError]):
         cursor = self.conn.cursor()
         for error in report_card_errors:
@@ -80,6 +104,6 @@ class ReportCardRepo:
                             error.dashboard_id,
                             error.pulse_id,
                             error.object_name,
-                            error.error))
+                            error.error[:512]))
         self.conn.commit()
         self.conn.close()

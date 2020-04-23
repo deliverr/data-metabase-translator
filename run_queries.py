@@ -1,7 +1,6 @@
 """
 Reads active queries from Metabase, invokes REST API and reports errors
 """
-from collections import namedtuple
 from typing import List
 
 from metabase import Properties, QueryApi, QueryAttempt, QueryExecutionRepo, QueryReport, ReportCardError, ReportCardRepo
@@ -14,30 +13,27 @@ def get_query_reports(props) -> List[QueryReport]:
     return query_reports
 
 
-def attempt_queries(query_reports: List[QueryReport]) -> List[QueryAttempt]:
-    query_api = QueryApi('myuser', 'mypassword')
-    query_attempts = [query_api.attempt_query(q) for q in query_reports]
-
-    return query_attempts
-
-
-def filter_errors(query_attempts: List[QueryAttempt]) -> List[ReportCardError]:
-    return [ReportCardError(q.query_report.card_id, q.query_report.dashboard_id,
-                              q.query_report.pulse_id, q.object_name, q.error)
-              for q in query_attempts if q.error is not None]
-
-
 def main():
-    query_exec_db_props = Properties(open('metabase.prod.yaml', 'r'))
-
-    query_reports = get_query_reports(query_exec_db_props)
-    query_attempts = attempt_queries(query_reports)
-    errors = filter_errors(query_attempts)
+    #query_exec_db_props = Properties(open('metabase.prod.yaml', 'r'))
+    #query_reports = get_query_reports(query_exec_db_props)
+    query_reports = []
+    with open("error-card-ids.txt", "r") as f:
+        for line in f:
+            query_reports.append(QueryReport(1, int(line), None, None, True, None))
 
     db_props = Properties(open('metabase.yaml', 'r'))
-    ReportCardRepo(db_props).insert_errors(errors)
+    query_api = QueryApi('myuser', 'mypassword')
+    error_count = 0
+    for query_report in query_reports:
+        query_attempt = query_api.attempt_query(query_report)
+        if query_attempt.error is not None:
+            error = ReportCardError(query_report.card_id, query_report.dashboard_id,
+                                    query_report.pulse_id, query_attempt.object_name,
+                                    query_attempt.error)
+            ReportCardRepo(db_props).insert_error(error)
+            error_count += 1
 
-    print(f"Attempted {len(query_attempts)} queries, with {len(errors)} errors")
+    print(f"Attempted {len(query_reports)} queries, with {error_count} errors")
 
 
 if __name__ == '__main__':
