@@ -28,11 +28,14 @@ def filter_errors(query_attempts: List[QueryAttempt]) -> List[ReportCardError]:
 
 
 def main():
-    props = Properties(open('metabase.prod.yaml', 'r'))
-    query_reports = get_query_reports(props)
+    query_exec_db_props = Properties(open('metabase.prod.yaml', 'r'))
+
+    query_reports = get_query_reports(query_exec_db_props)
     query_attempts = attempt_queries(query_reports)
     errors = filter_errors(query_attempts)
-    ReportCardRepo(props).insert_errors(errors)
+
+    db_props = Properties(open('metabase.yaml', 'r'))
+    ReportCardRepo(db_props).insert_errors(errors)
 
     print(f"Attempted {len(query_attempts)} queries, with {len(errors)} errors")
 
