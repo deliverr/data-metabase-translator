@@ -74,7 +74,7 @@ class ReportCardRepo:
             insert = f"INSERT INTO report_card_error " \
                      f"(card_id, dashboard_id, pulse_id, object_name, error, " \
                      f" created_at, updated_at) " \
-                     f"VALUES (%s, %s, %s, current_timestamp , current_timestamp )"
+                     f"VALUES (%s, %s, %s, %s, %s, current_timestamp , current_timestamp )"
             cursor.execute(insert,
                            (error.card_id,
                             error.dashboard_id,
