@@ -20,10 +20,13 @@ class QueryExecutionRepo:
     def fetch_active(self, days_ago=90) -> List[QueryReport]:
         cursor = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        cursor.execute(f"select count(*) as runs, card_id, dashboard_id, pulse_id, native, context "
-                       f"from query_execution "
+        cursor.execute(f"select count(*) as runs, card_id, null as dashboard_id, null as pulse_id, native, null as context "
+                       f"from query_execution qe inner join report_card card on qe.card_id = card.id "
                         f"where started_at > current_timestamp - interval '{days_ago} days' "
                         f"and error is null and context != 'ad-hoc' "
+                       f"and card.database_id = {self.database_id} "
+                       f"and card_id not in (select card_id from report_card_error_post_migration) "
+                       f"and card_id not in (select card_id from report_card_snowflake_success)"
                        f"group by 2, 3, 4, 5, 6 order by 1 desc;")
         raw_query_reports = cursor.fetchall()
 

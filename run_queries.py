@@ -14,12 +14,12 @@ def get_query_reports(props) -> List[QueryReport]:
 
 
 def main():
-    #query_exec_db_props = Properties(open('metabase.prod.yaml', 'r'))
-    #query_reports = get_query_reports(query_exec_db_props)
-    query_reports = []
-    with open("error-card-ids.txt", "r") as f:
-        for line in f:
-            query_reports.append(QueryReport(1, int(line), None, None, True, None))
+    query_exec_db_props = Properties(open('metabase.prod.yaml', 'r'))
+    query_reports = get_query_reports(query_exec_db_props)
+    #query_reports = []
+    #with open("error-card-ids.txt", "r") as f:
+    #    for line in f:
+    #        query_reports.append(QueryReport(1, int(line), None, None, True, None))
 
     db_props = Properties(open('metabase.yaml', 'r'))
     query_api = QueryApi('myuser', 'mypassword')
