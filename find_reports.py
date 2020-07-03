@@ -6,13 +6,13 @@ import sqlparse
 
 
 def main():
-    table = 'onboarding.seller'
     props = Properties(open('metabase.yaml', 'r'))
 
     repo = ReportCardRepo(props)
     report_cards = repo.fetchall()
     print(f"Retrieved {len(report_cards)} native queries")
 
+    table = 'find.me'
     reports = []
     for report_card in report_cards:
         sql = report_card.dataset_query['native']['query']
