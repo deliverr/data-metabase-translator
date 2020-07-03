@@ -22,16 +22,14 @@ def main():
               print(f"{report_card}")
               reports.append(report_card)
 
-    print(f"Found {len(reports)}: {', '.join([id for r in reports])}")
+    print(f"Found {len(reports)} reports: {', '.join(sorted([str(r.id) for r in reports]))}")
 
 
 def references(statement, table):
     if table in statement.value.lower():
         return True
     return False
-    #if statement.is_group:
-    #    for child in statement.tokens:
-    #        return references(child, table)
+
 
 if __name__ == '__main__':
     main()
