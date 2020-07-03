@@ -1,5 +1,5 @@
 """
-Reads queries from Metabase and finds reports that match a table name
+Reads queries from Metabase and finds reports that contain a string
 """
 from metabase import Properties, ReportCardRepo
 import sqlparse
