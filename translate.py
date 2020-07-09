@@ -10,6 +10,7 @@ def main():
 
     repo = ReportCardRepo(props)
     report_cards = repo.fetchall()
+    #report_cards = repo.fetch_by_ids([1024])
     print(f"Retrieved {len(report_cards)} native queries")
 
     report_card_migrations = []
@@ -22,7 +23,7 @@ def main():
             report_card_migrations.append(
                 repo.create_migration(report_card, new_sql))
 
-    repo.insert_all(report_card_migrations)
+    repo.insert_migrations(report_card_migrations)
 
     print(f"Wrote {len(report_card_migrations)} rows to report_card_migration")
 
