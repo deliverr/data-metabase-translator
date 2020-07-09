@@ -26,15 +26,7 @@ def redshift_to_snowflake(token: TranslateToken) -> None:
         elif token.matches('#'):
             token.set('num')
         elif token.is_identifier():
-            if token.matches('"start-date"'):
-                token.replace('"start-date"', "start_date")
-            elif token.matches('warehousepoolinventorylog."delta"'):
-                token.set('warehousepoolinventorylog.delta')
-            elif token.matches('transit.fasttagdaysleft'):
-                token.set('velocity.fasttagdaysleft')
-            elif token.matches('"order_count"'):
-                token.set('order_count')
-            elif len(token.children) < 5 and token.contains('__'):
+            if len(token.children) < 5 and token.contains('__'):
                 token.replace('__', ':')
 
     except ValueError as e:

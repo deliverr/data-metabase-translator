@@ -45,8 +45,3 @@ class SqlTranslatorTest(TestCase):
         translator = SqlTranslator(sql)
         assert translator.sql() == "SELECT my:redshift:json:workaround FROM mytable"
 
-    def test_replace_transit_fasttagdaysleft(self):
-        sql = "SELECT * from transit.fasttagdaysleft left join transit.fasttagdaysleft on fasttagdaysleft.dsku = fasttagdaysleft.dsku"
-        translator = SqlTranslator(sql)
-        assert translator.sql() == "SELECT * from velocity.fasttagdaysleft left join velocity.fasttagdaysleft on fasttagdaysleft.dsku = fasttagdaysleft.dsku"
-
