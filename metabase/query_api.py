@@ -12,8 +12,7 @@ QueryAttempt = namedtuple('QueryAttempt', ('query_report', 'object_name', 'error
 class QueryApi:
 
     def __init__(self, username, password):
-        self.client = Client(base_url='http://deliverr-metabase-staging.us-east-1.elasticbeanstalk.com',
-        #self.client = Client(base_url='http://localhost:3000',
+        self.client = Client(base_url='http://localhost:3000',
                              username=username, password=password)
         self.client.authenticate()
 
