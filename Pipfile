@@ -12,6 +12,7 @@ pyyaml = "*"
 psycopg2-binary = "*"
 metabasepy = "*"
 requests = "*"
+sql-metadata = "*"
 
 [requires]
 python_version = "3.7"
